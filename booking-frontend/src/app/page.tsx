@@ -35,8 +35,15 @@ export default function Home() {
   }, []);
 
   const handleBooking = async () => {
+    // --- Client-side validation ---
     if (!firstName || !lastName || !email || tickets <= 0) {
       toast.error("Please fill all fields correctly!");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email");
       return;
     }
 
@@ -45,22 +52,23 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: firstName,
+          firstName, // ✅ Must match Go struct
           lastName,
           email,
           tickets,
         }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const errData = await res.json();
-        toast.error(errData.message || "Booking failed!");
+        toast.error(data.error || "Booking failed!");
         return;
       }
 
-      const data = await res.json();
       toast.success(data.message);
 
+      // Reset form fields
       setFirstName("");
       setLastName("");
       setEmail("");
