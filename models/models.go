@@ -14,7 +14,7 @@ type UserData struct {
 	gorm.Model
 	FirstName       string
 	LastName        string
-	Email           string `gorm:"uniqueIndex"`
+	Email           string // removed `uniqueIndex` to allow multiple bookings per email
 	NumberOfTickets uint
 	ConferenceID    uint
 	Conference      Conference `gorm:"foreignKey:ConferenceID"`

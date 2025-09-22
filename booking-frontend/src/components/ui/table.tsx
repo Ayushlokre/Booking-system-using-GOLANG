@@ -1,7 +1,6 @@
-"use client";
-
+// src/components/ui/table.tsx
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"; // your utility for classNames
 
 export const Table = ({ className, ...props }: React.TableHTMLAttributes<HTMLTableElement>) => (
   <div className="relative w-full overflow-x-auto">
@@ -9,26 +8,32 @@ export const Table = ({ className, ...props }: React.TableHTMLAttributes<HTMLTab
   </div>
 );
 
-export const TableHeader = ({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
-  <thead className={cn("bg-gray-100 dark:bg-gray-800", className)} {...props} />
+export const TableHeader = ({ children, className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
+  <thead className={cn("bg-gray-100", className)} {...props}>
+    {children}
+  </thead>
 );
 
-export const TableBody = ({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
-  <tbody className={cn("divide-y", className)} {...props} />
+export const TableBody = ({ children, className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) => (
+  <tbody className={cn("", className)} {...props}>
+    {children}
+  </tbody>
 );
 
-export const TableRow = ({ className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) => (
-  <tr className={cn("hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors", className)} {...props} />
+export const TableRow = ({ children, className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) => (
+  <tr className={cn("hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors", className)} {...props}>
+    {children}
+  </tr>
 );
 
-export const TableHead = ({ className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) => (
-  <th className={cn("px-4 py-2 text-left font-medium text-gray-700 dark:text-gray-200", className)} {...props} />
+export const TableHeadCell = ({ children, className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) => (
+  <th className={cn("px-4 py-2 text-left font-medium text-gray-700 dark:text-gray-200", className)} {...props}>
+    {children}
+  </th>
 );
 
-export const TableCell = ({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) => (
-  <td className={cn("px-4 py-2 text-gray-800 dark:text-gray-100", className)} {...props} />
-);
-
-export const TableCaption = ({ className, ...props }: React.HTMLAttributes<HTMLTableCaptionElement>) => (
-  <caption className={cn("text-sm text-gray-500 dark:text-gray-400 mt-2", className)} {...props} />
+export const TableCell = ({ children, className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) => (
+  <td className={cn("px-4 py-2 border-b border-gray-200 dark:border-gray-700", className)} {...props}>
+    {children}
+  </td>
 );

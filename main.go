@@ -175,7 +175,6 @@ func bookTicket(c *models.Conference, userTickets uint, firstName, lastName, ema
 		log.Printf("Transaction begin error: %v", tx.Error)
 		return false
 	}
-	log.Printf("Transaction started successfully")
 
 	var currentConference models.Conference
 	if err := tx.First(&currentConference, c.ID).Error; err != nil {
@@ -183,15 +182,12 @@ func bookTicket(c *models.Conference, userTickets uint, firstName, lastName, ema
 		tx.Rollback()
 		return false
 	}
-	log.Printf("Conference found: %s (ID: %d)", currentConference.Name, currentConference.ID)
-	log.Printf("Total tickets: %d, Remaining: %d", currentConference.TotalTickets, currentConference.RemainingTickets)
 
 	if userTickets > currentConference.RemainingTickets {
 		log.Printf("Not enough tickets. Requested: %d, Available: %d", userTickets, currentConference.RemainingTickets)
 		tx.Rollback()
 		return false
 	}
-	log.Printf("Ticket availability check passed")
 
 	userData := models.UserData{
 		FirstName:       firstName,
@@ -201,31 +197,25 @@ func bookTicket(c *models.Conference, userTickets uint, firstName, lastName, ema
 		ConferenceID:    currentConference.ID,
 	}
 
-	log.Printf("Attempting to create booking record...")
+	log.Printf("Creating booking record...")
 	if err := tx.Create(&userData).Error; err != nil {
 		log.Printf("Failed to create booking: %v", err)
-		log.Printf("This might be a duplicate email or database constraint issue")
 		tx.Rollback()
 		return false
 	}
-	log.Printf("Booking record created successfully")
 
 	newRemainingTickets := currentConference.RemainingTickets - userTickets
-	log.Printf("Updating remaining tickets from %d to %d", currentConference.RemainingTickets, newRemainingTickets)
-
 	if err := tx.Model(&models.Conference{}).Where("id = ?", currentConference.ID).
 		Update("remaining_tickets", newRemainingTickets).Error; err != nil {
 		log.Printf("Failed to update tickets: %v", err)
 		tx.Rollback()
 		return false
 	}
-	log.Printf("Ticket count updated successfully")
 
 	if err := tx.Commit().Error; err != nil {
 		log.Printf("Transaction commit error: %v", err)
 		return false
 	}
-	log.Printf("Transaction committed successfully")
 
 	log.Printf("Booking successful for %s %s - %d tickets", firstName, lastName, userTickets)
 	return true
