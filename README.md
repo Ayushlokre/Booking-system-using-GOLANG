@@ -1,285 +1,171 @@
 
 ---
 
-# Conference Booking System
+# **Conference Ticket Booking System**
 
-A **full-stack web application** designed to manage conference ticket bookings efficiently. This project demonstrates the integration of **Next.js (frontend), Go (backend), and PostgreSQL (database)** to handle user interactions, validate input, and maintain ticket availability in real-time.
+## **Table of Contents**
 
-This system is ideal for small-to-medium conferences and events where organizers want to track ticket sales and ensure proper management of user bookings.
+1. [Overview](#overview)
+2. [Tech Stack](#tech-stack)
+3. [Database Tables](#database-tables)
+4. [Features](#features)
+5. [Installation](#installation)
 
----
-
-## Table of Contents
-
-1. [Features](#features)
-2. [Architecture](#architecture)
-3. [Technologies Used](#technologies-used)
-4. [Project Structure](#project-structure)
-5. [Backend Implementation](#backend-implementation)
-6. [Frontend Implementation](#frontend-implementation)
-7. [Database Design](#database-design)
-8. [API Endpoints](#api-endpoints)
-9. [Installation & Setup](#installation--setup)
-10. [Usage](#usage)
-11. [Contributing](#contributing)
-12. [License](#license)
+   * [Backend (Go API)](#backend-go-api)
+   * [Frontend (Next.js + ShadCN UI)](#frontend-nextjs--shadcn-ui)
+6. [How It Works](#how-it-works)
+7. [Usage / Booking Flow](#usage--booking-flow)
+8. [Notes](#notes)
+9. [Project Preview](#project-preview)
 
 ---
 
-## Features
+## **Overview**
 
-* **Real-Time Booking:** Users can book tickets for a conference instantly.
-* **Multiple Bookings:** Users can book multiple times with the same email.
-* **Input Validation:** Ensures names, emails, and ticket quantities are valid.
-* **Ticket Availability Management:** The system updates remaining tickets automatically.
-* **Booking Summary:** View all user bookings and conference details.
-* **Robust Error Handling:** Handles duplicate emails, overbooking, and invalid requests gracefully.
-* **Debugging Endpoint:** Provides a debug view to see all bookings and conference info for developers.
+This is a **conference ticket booking system** allowing users to book tickets for a conference, view bookings, and manage ticket availability in real time. It combines **Next.js**, **ShadCN UI**, **server actions**, **Go (Golang) API**, and **PostgreSQL** to provide a modern full-stack solution.
 
 ---
 
-## Architecture
+## **Tech Stack**
 
-The system follows a **client-server architecture**:
-
-1. **Frontend (Next.js):**
-
-   * Handles user interface, input forms, and displays booking/conference data.
-   * Communicates with the backend via REST API endpoints.
-
-2. **Backend (Go):**
-
-   * Provides API endpoints for booking tickets, fetching bookings, and conference details.
-   * Uses **GORM** ORM to manage database interactions with PostgreSQL.
-   * Implements **transactional booking** to ensure ticket count accuracy.
-
-3. **Database (PostgreSQL):**
-
-   * Stores conference details and user bookings.
-   * Supports multiple bookings per user and enforces constraints like ticket count validation.
+| Layer         | Technology           | Purpose                              |
+| ------------- | -------------------- | ------------------------------------ |
+| Frontend      | Next.js + TypeScript | SSR/CSR and app routing              |
+| UI            | ShadCN UI            | Responsive and modern components     |
+| Backend       | Go (Golang)          | Business logic and REST API          |
+| Database      | PostgreSQL           | Stores conference & booking data     |
+| ORM           | GORM                 | Database operations and transactions |
+| Communication | RESTful API (JSON)   | Frontend ↔ Backend                   |
 
 ---
 
-## Technologies Used
+## **Database Tables**
 
-| Layer      | Technology                  | Description                                                  |
-| ---------- | --------------------------- | ------------------------------------------------------------ |
-| Frontend   | Next.js, TypeScript, React  | User interface, dynamic forms, API integration               |
-| Backend    | Go (Golang), net/http, GORM | Handles requests, manages bookings and database transactions |
-| Database   | PostgreSQL                  | Stores conferences and booking data reliably                 |
-| ORM        | GORM                        | Simplifies database operations in Go                         |
-| Styling    | Tailwind CSS (optional)     | Provides a modern UI look                                    |
-| Versioning | Git, GitHub                 | Source control and collaboration                             |
+### **Conference Table**
 
----
+| Column             | Type      | Description             |
+| ------------------ | --------- | ----------------------- |
+| id                 | bigint    | Primary Key             |
+| name               | text      | Conference Name         |
+| total\_tickets     | int       | Total available tickets |
+| remaining\_tickets | int       | Remaining tickets       |
+| created\_at        | timestamp | Record creation time    |
+| updated\_at        | timestamp | Last updated time       |
 
-## Project Structure
+### **UserData Table**
 
-```
-booking-app/
-│
-├─ booking-backend/         # Go backend
-│  ├─ main.go               # Main server and API logic
-│  ├─ models/               # Database models (Conference, UserData)
-│  ├─ database/             # DB connection and initialization
-│  └─ helper/               # Validation helper functions
-│
-├─ booking-frontend/        # Next.js frontend
-│  ├─ src/
-│  │   ├─ app/             # Pages and components
-│  │   └─ components/      # UI elements (Table, Input, Button)
-│  ├─ public/              # Static assets
-│  └─ tsconfig.json        # TypeScript configuration
-│
-└─ README.md
-```
+| Column              | Type      | Description                       |
+| ------------------- | --------- | --------------------------------- |
+| id                  | bigint    | Primary Key                       |
+| first\_name         | text      | User's first name                 |
+| last\_name          | text      | User's last name                  |
+| email               | text      | User's email (duplicates allowed) |
+| number\_of\_tickets | int       | Number of tickets booked          |
+| conference\_id      | bigint    | Foreign Key to `Conference`       |
+| created\_at         | timestamp | Record creation time              |
+| updated\_at         | timestamp | Last updated time                 |
 
 ---
 
-## Backend Implementation
+## **Features**
 
-1. **Booking Logic:**
+* Modern UI with **ShadCN components**
+* **Server action integration** for seamless frontend-backend communication
+* **Go API** ensures transactional consistency and ticket validation
+* **PostgreSQL database** tracks tickets and bookings
+* **Multiple bookings allowed per user email**
+* Real-time booking updates and ticket availability
+* REST API endpoints:
 
-   * Users submit booking requests via `/api/book`.
-   * Backend validates names, emails, and requested ticket numbers.
-   * A database transaction ensures tickets are deducted atomically.
-   * Multiple bookings per user are allowed by removing the `unique` constraint on email.
-
-2. **Concurrency Handling:**
-
-   * The Go backend uses **database transactions** to avoid race conditions on ticket availability.
-   * Remaining tickets are always checked before booking to prevent overbooking.
-
-3. **API Routes:**
-
-   * `/api/book` – POST, books tickets.
-   * `/api/bookings` – GET, fetch all bookings.
-   * `/api/conference` – GET, fetch conference info.
-   * `/api/debug` – GET, for development/debugging purposes.
+  * `POST /api/book` → Book tickets
+  * `GET /api/bookings` → Fetch all bookings
+  * `GET /api/conference` → Get conference info
+  * `GET /api/debug` → Debug info
 
 ---
 
-## Frontend Implementation
+## **Installation**
 
-1. **Booking Form:**
+### **Backend (Go API)**
 
-   * Users provide first name, last name, email, and number of tickets.
-   * Client-side validation ensures the inputs are correctly formatted.
-
-2. **Booking Response:**
-
-   * Displays success message after booking.
-   * Fetches and updates booking data in real-time without refreshing the page.
-
-3. **Booking Table:**
-
-   * Shows all bookings dynamically using the `/api/bookings` endpoint.
-   * Displays user details and number of tickets booked.
-
----
-
-## Database Design
-
-### Conference Table
-
-| Column             | Type      | Description              |
-| ------------------ | --------- | ------------------------ |
-| id                 | bigint    | Primary key              |
-| name               | text      | Conference name          |
-| total\_tickets     | uint      | Total tickets available  |
-| remaining\_tickets | uint      | Tickets left for booking |
-| created\_at        | timestamp | Record creation time     |
-| updated\_at        | timestamp | Last update time         |
-
-### UserData Table
-
-| Column              | Type      | Description                            |
-| ------------------- | --------- | -------------------------------------- |
-| id                  | bigint    | Primary key                            |
-| first\_name         | text      | User first name                        |
-| last\_name          | text      | User last name                         |
-| email               | text      | User email (multiple bookings allowed) |
-| number\_of\_tickets | uint      | Tickets booked                         |
-| conference\_id      | bigint    | Foreign key referencing Conference     |
-| created\_at         | timestamp | Record creation time                   |
-| updated\_at         | timestamp | Last update time                       |
-
----
-
-## API Endpoints
-
-### Book Tickets
-
-* **URL:** `/api/book`
-* **Method:** POST
-* **Request Body:**
-
-```json
-{
-  "firstName": "John",
-  "lastName": "Doe",
-  "email": "john@example.com",
-  "tickets": 2
-}
-```
-
-* **Response Body:**
-
-```json
-{
-  "message": "Thank you John Doe for booking 2 tickets!"
-}
-```
-
-### Get All Bookings
-
-* **URL:** `/api/bookings`
-* **Method:** GET
-* **Response Body:**
-
-```json
-[
-  {
-    "ID": 1,
-    "FirstName": "John",
-    "LastName": "Doe",
-    "Email": "john@example.com",
-    "NumberOfTickets": 2,
-    "Conference": { "Name": "Go Conference" }
-  }
-]
-```
-
-### Get Conference Details
-
-* **URL:** `/api/conference`
-* **Method:** GET
-* **Response Body:**
-
-```json
-{
-  "ID": 1,
-  "Name": "Go Conference",
-  "TotalTickets": 50,
-  "RemainingTickets": 48
-}
-```
-
-### Debug Endpoint
-
-* **URL:** `/api/debug`
-* **Method:** GET
-* Provides complete debug info including conference data and bookings count.
-
----
-
-## Installation & Setup
-
-### Prerequisites
-
-* Node.js (v18+)
-* Go (v1.20+)
-* PostgreSQL
-
-### Backend Setup
+1. Install [Go](https://golang.org/dl/)
+2. Set up PostgreSQL and create a database, e.g., `booking_db`
+3. Update `database.ConnectDatabase()` in `main.go` with your DB credentials
+4. Navigate to the backend folder:
 
 ```bash
-cd booking-app/booking-backend
-# Configure DB connection in database package
+cd booking-app
+```
+
+5. Run the backend server:
+
+```bash
 go run main.go
 ```
 
-### Frontend Setup
+6. Server will run at `http://localhost:8080`
+
+---
+
+### **Frontend (Next.js + ShadCN UI)**
+
+1. Install [Node.js](https://nodejs.org/)
+2. Navigate to the frontend folder:
 
 ```bash
-cd booking-app/booking-frontend
+cd booking-frontend
+```
+
+3. Install dependencies:
+
+```bash
 npm install
+```
+
+4. Run development server:
+
+```bash
 npm run dev
 ```
 
-Open in browser: `http://localhost:3000`
+5. Open `http://localhost:3000` in your browser
 
 ---
 
-## Usage
+## **How It Works**
 
-1. Open the frontend URL in a browser.
-2. Fill out the booking form with your details.
-3. Submit booking – success message will appear.
-4. View all bookings on the booking table.
-5. Multiple bookings are allowed with the same email.
+1. User fills the booking form on the homepage (First Name, Last Name, Email, Tickets).
+2. Form triggers a **server action (`bookTickets`)**.
+3. Server action sends a POST request to Go API (`/api/book`).
+4. Go API validates:
 
----
-
-## Contributing
-
-* Fork the repository
-* Create a new branch (`git checkout -b feature-name`)
-* Make your changes and commit (`git commit -m "Add feature"`)
-* Push to the branch (`git push origin feature-name`)
-* Open a Pull Request
+   * Ticket availability
+   * User input (name, email, ticket quantity)
+   * Creates booking in PostgreSQL
+   * Updates remaining tickets
+5. Success or error message is returned to the frontend.
+6. Users can fetch all bookings or conference info via dedicated endpoints.
 
 ---
 
+## **Usage / Booking Flow**
+
+1. Fill in the booking form with your details.
+2. Submit → triggers server action → calls Go API → updates DB.
+3. Success message appears:
+
+   ```
+   Thank you [FirstName] [LastName] for booking [N] tickets!
+   ```
+4. View all bookings via the bookings table on the frontend.
+
+---
+
+## **Notes**
+
+* The system **supports multiple bookings per email**
+* Remaining tickets are **automatically updated** after each booking
+* All actions are **transactional** to prevent overbooking
+* Frontend uses **ShadCN components** for responsive, modern UI
 
 
